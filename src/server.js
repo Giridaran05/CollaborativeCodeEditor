@@ -4,9 +4,9 @@ const http = require("http");
 const { Server } = require("socket.io");
 const cors = require("cors");
 
-const connectDB = require("./src/config/db");
-const editorSocket = require("./src/sockets/editorSocket");
-const roomRoutes = require("./src/routes/roomRoutes");
+const connectDB = require("./config/db");
+const editorSocket = require("./sockets/editorSocket");
+const roomRoutes = require("./routes/roomRoutes");
 
 const app = express();
 
