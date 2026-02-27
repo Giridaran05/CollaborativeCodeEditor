@@ -1,9 +1,10 @@
 const Room = require("../models/Room");
 
+// 🔹 In-memory room user tracking
+const activeRooms = {};
+
 const editorSocket = (io) => {
-
   io.on("connection", (socket) => {
-
     console.log("User connected:", socket.id);
 
     // ==============================
@@ -12,6 +13,21 @@ const editorSocket = (io) => {
     socket.on("join_room", async (roomId) => {
       try {
         socket.join(roomId);
+
+        // Track user in memory
+        if (!activeRooms[roomId]) {
+          activeRooms[roomId] = [];
+        }
+
+        const user = {
+          id: socket.id,
+          username: "User_" + socket.id.slice(0, 4)
+        };
+
+        activeRooms[roomId].push(user);
+
+        // Send active users list to room
+        io.to(roomId).emit("active_users", activeRooms[roomId]);
 
         let room = await Room.findOne({ roomId });
 
@@ -51,7 +67,6 @@ const editorSocket = (io) => {
       try {
         socket.to(roomId).emit("receive_code", code);
 
-        // Optional: consider debouncing in production
         await Room.findOneAndUpdate(
           { roomId },
           { code },
@@ -96,12 +111,22 @@ const editorSocket = (io) => {
     socket.on("disconnect", () => {
       console.log("User disconnected:", socket.id);
 
-      // Later we can emit user_leave for active users panel
-      // socket.to(roomId).emit("user_left", socket.id);
+      // Remove user from all rooms
+      for (const roomId in activeRooms) {
+        activeRooms[roomId] = activeRooms[roomId].filter(
+          (user) => user.id !== socket.id
+        );
+
+        // Update active users list
+        io.to(roomId).emit("active_users", activeRooms[roomId]);
+
+        // Clean empty rooms
+        if (activeRooms[roomId].length === 0) {
+          delete activeRooms[roomId];
+        }
+      }
     });
-
   });
-
 };
 
 module.exports = editorSocket;
