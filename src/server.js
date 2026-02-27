@@ -7,6 +7,7 @@ const cors = require("cors");
 const connectDB = require("./config/db");
 const editorSocket = require("./sockets/editorSocket");
 const roomRoutes = require("./routes/roomRoutes");
+const runRoutes = require("./routes/runRoutes");
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use(express.json());
 
 // 🔹 Routes
 app.use("/api/rooms", roomRoutes);
+app.use("/api/run", runRoutes);
 
 // 🔹 Create server
 const server = http.createServer(app);
